@@ -5,14 +5,16 @@ require(shiny)
 require(data.table)
 require(Rcpp)
 require(shapes)
+
+setwd("~/Documents/thesis/git/adaptive-introgression/data/populus/")
 sourceCpp("~/Documents/thesis/git/adaptive-introgression/aiUtils.cpp")
-setwd("~/Documents/thesis/git/Introgression/populus/Original_data_set_ch6_12_15/")
+
 
 #### pcadapt file: individuals in columns ###
-filename <- "comt.chr06.snp.full.final.pcadapt"
+filename <- "chr06.pcadapt"
 
 #### population file: individuals in rows ###
-popfile <- "populus.txt"
+popfile <- "populus3pops.pop"
 
 ################## rs file ##################
 #rsfile <- "tmp.map"
@@ -33,13 +35,16 @@ if ((K %% 2)==1){
 }
 #############################################
 geno.matrix <- as.matrix(fread(filename))
-pop <- as.character(read.table(popfile, header = TRUE)$POP)
+pop <- read.table(popfile, header = TRUE)
 na.snp.vec <- apply(geno.matrix, MARGIN = 2, FUN = function(x){sum(x == 9)})
 na.ind.vec <- apply(geno.matrix, MARGIN = 1, FUN = function(x){sum(x == 9)})
 #rsinfo <- read.table(rsfile,header = FALSE)
 nIND <- length(pop)
 
-imptd.geno <- impute_geno(geno.matrix)
+res <- impute_geno(geno.matrix)
+imptd.geno <- res$x
+discarded <- which(res$keep == 0)
+imptd.geno[geno.matrix == 9] <- 0
 #geno.matrix <- t(geno.matrix)
 geno.matrix <- t(imptd.geno)
 
