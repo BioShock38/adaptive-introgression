@@ -14,51 +14,49 @@ arma::mat compute_stat(arma::mat &geno, arma::vec &scores, arma::vec &loadings, 
   stat.zeros();
   arma::vec tmp(nIND);
   tmp.zeros();
-  int n_count = 0;
+  
+  double sum_loadings = 0;
   for (int j = 0; j < nIND; j++){
     for (int k = 0; k < window_size; k++){
       tmp[j] += geno.at(j, k) * loadings[k] / sigma;
+      sum_loadings += loadings[k] * loadings[k];
     }
-    tmp[j] *= double (nSNP / window_size);
     if (direction == 1){
       if ((tmp[j] - scores[j]) > 0){
-        stat[0] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]); 
-        n_count++;
+        stat[0] += ((tmp[j] / sum_loadings) - scores[j]) * ((tmp[j] / sum_loadings) - scores[j]); 
+      }
+    } else if (direction == -1){
+      if ((tmp[j] - scores[j]) < 0){
+        stat[0] += ((tmp[j] / sum_loadings) - scores[j]) * ((tmp[j] / sum_loadings) - scores[j]); 
       }
     } else if (direction == 0){
-      if ((tmp[j] - scores[j]) < 0){
-        stat[0] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);  
-        n_count++;
-      }
+      stat[0] += ((tmp[j] / sum_loadings) - scores[j]); 
     }
   }
-  //stat[0] /= sqrt(nIND + 1 - n_count);
+  
   for (int i = 1; i < (nSNP - window_size); i++){
-    int n_count = 0;
     for (int j = 0; j < nIND; j++){
       int i_beg = i - 1;
       int i_end = i + window_size;
-      tmp[j] -= geno.at(j, i_beg) * loadings[i_beg] * nSNP/ (window_size * sigma);
-      tmp[j] += geno.at(j, i_end) * loadings[i_end] * nSNP/ (window_size * sigma);
+      tmp[j] -= geno.at(j, i_beg) * loadings[i_beg] / sigma;
+      sum_loadings -= loadings[i_beg] * loadings[i_beg]; 
+      tmp[j] += geno.at(j, i_end) * loadings[i_end] / sigma;
+      sum_loadings += loadings[i_end] * loadings[i_end];
       if (direction == 1){
         if ((tmp[j] - scores[j]) > 0){
-          stat[i] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);   
-          n_count++;
+          stat[i] += ((tmp[j] / sum_loadings) - scores[j]) * ((tmp[j] / sum_loadings) - scores[j]); 
         }
       } else if (direction == -1){
         if ((tmp[j] - scores[j]) < 0){
-          stat[i] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);   
-          n_count++;
+          stat[i] += ((tmp[j] / sum_loadings) - scores[j]) * ((tmp[j] / sum_loadings) - scores[j]); 
         }
       } else if (direction == 0){
-        stat[i] += (tmp[j] - scores[j]);   
-        n_count++;
+        stat[i] += ((tmp[j] / sum_loadings) - scores[j]); 
       }
     }
     if (direction == 0){
       stat[i] *= stat[i];
     }
-    //stat[i] /= sqrt(nIND + 1 - n_count);
   }
   for (int i = (nSNP - window_size); i < nSNP; i++){
     stat[i] = stat[nSNP - window_size - 1];
@@ -171,3 +169,125 @@ arma::vec compute_stat_procrusted(arma::mat &geno_adm,
   }
   return(stat);
 }
+
+
+// [[Rcpp::export]]
+arma::mat compute_stat_local_pca(arma::mat &geno, arma::vec &scores, arma::vec &loadings, double sigma, int window_size, int direction){
+  int nSNP = geno.n_cols;
+  int nIND = geno.n_rows;
+  arma::vec stat(nSNP);
+  stat.zeros();
+  arma::vec tmp(nIND);
+  tmp.zeros();
+  int n_count = 0;
+  for (int j = 0; j < nIND; j++){
+    for (int k = 0; k < window_size; k++){
+      tmp[j] += geno.at(j, k) * loadings[k] / sigma;
+    }
+    tmp[j] *= double (nSNP / window_size);
+    if (direction == 1){
+      if ((tmp[j] - scores[j]) > 0){
+        stat[0] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]); 
+        n_count++;
+      }
+    } else if (direction == 0){
+      if ((tmp[j] - scores[j]) < 0){
+        stat[0] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);  
+        n_count++;
+      }
+    }
+  }
+  //stat[0] /= sqrt(nIND + 1 - n_count);
+  for (int i = 1; i < (nSNP - window_size); i++){
+    int n_count = 0;
+    for (int j = 0; j < nIND; j++){
+      int i_beg = i - 1;
+      int i_end = i + window_size;
+      tmp[j] -= geno.at(j, i_beg) * loadings[i_beg] * nSNP/ (window_size * sigma);
+      tmp[j] += geno.at(j, i_end) * loadings[i_end] * nSNP/ (window_size * sigma);
+      if (direction == 1){
+        if ((tmp[j] - scores[j]) > 0){
+          stat[i] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);   
+          n_count++;
+        }
+      } else if (direction == -1){
+        if ((tmp[j] - scores[j]) < 0){
+          stat[i] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);   
+          n_count++;
+        }
+      } else if (direction == 0){
+        stat[i] += (tmp[j] - scores[j]);   
+        n_count++;
+      }
+    }
+    if (direction == 0){
+      stat[i] *= stat[i];
+    }
+    //stat[i] /= sqrt(nIND + 1 - n_count);
+  }
+  for (int i = (nSNP - window_size); i < nSNP; i++){
+    stat[i] = stat[nSNP - window_size - 1];
+  }
+  return(stat);
+}
+
+// [[Rcpp::export]]
+arma::mat compute_stat(arma::mat &geno, arma::vec &scores, arma::vec &loadings, double sigma, int window_size, int direction){
+  int nSNP = geno.n_cols;
+  int nIND = geno.n_rows;
+  arma::vec stat(nSNP);
+  stat.zeros();
+  arma::vec tmp(nIND);
+  tmp.zeros();
+  int n_count = 0;
+  for (int j = 0; j < nIND; j++){
+    for (int k = 0; k < window_size; k++){
+      tmp[j] += geno.at(j, k) * loadings[k] / sigma;
+    }
+    tmp[j] *= double (nSNP / window_size);
+    if (direction == 1){
+      if ((tmp[j] - scores[j]) > 0){
+        stat[0] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]); 
+        n_count++;
+      }
+    } else if (direction == 0){
+      if ((tmp[j] - scores[j]) < 0){
+        stat[0] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);  
+        n_count++;
+      }
+    }
+  }
+  //stat[0] /= sqrt(nIND + 1 - n_count);
+  for (int i = 1; i < (nSNP - window_size); i++){
+    int n_count = 0;
+    for (int j = 0; j < nIND; j++){
+      int i_beg = i - 1;
+      int i_end = i + window_size;
+      tmp[j] -= geno.at(j, i_beg) * loadings[i_beg] * nSNP/ (window_size * sigma);
+      tmp[j] += geno.at(j, i_end) * loadings[i_end] * nSNP/ (window_size * sigma);
+      if (direction == 1){
+        if ((tmp[j] - scores[j]) > 0){
+          stat[i] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);   
+          n_count++;
+        }
+      } else if (direction == -1){
+        if ((tmp[j] - scores[j]) < 0){
+          stat[i] += (tmp[j] - scores[j]) * (tmp[j] - scores[j]);   
+          n_count++;
+        }
+      } else if (direction == 0){
+        stat[i] += (tmp[j] - scores[j]);   
+        n_count++;
+      }
+    }
+    if (direction == 0){
+      stat[i] *= stat[i];
+    }
+    //stat[i] /= sqrt(nIND + 1 - n_count);
+  }
+  for (int i = (nSNP - window_size); i < nSNP; i++){
+    stat[i] = stat[nSNP - window_size - 1];
+  }
+  return(stat);
+}
+
