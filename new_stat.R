@@ -5,10 +5,10 @@ require(shiny)
 require(data.table)
 require(Rcpp)
 require(ade4)
-sourceCpp("~/Documents/thesis/git/adaptive-introgression/aiUtils.cpp")
-sourceCpp("~/Documents/thesis/git/adaptive-introgression/rotation.cpp")
-sourceCpp("~/Documents/thesis/git/adaptive-introgression/imputationUtils.cpp")
-setwd("~/Documents/thesis/git/Introgression/populus/Original_data_set_ch6_12_15/")
+#sourceCpp("~/thesis/git/adaptive-introgression/aiUtils.cpp")
+sourceCpp("~/thesis/git/adaptive-introgression/rotation.cpp")
+sourceCpp("~/thesis/git/adaptive-introgression/imputationUtils.cpp")
+setwd("~/thesis/git/Introgression/populus/Original_data_set_ch6_12_15/")
 
 
 filename <- "populus3pops.pcadapt" #we assume the conversion to the pcadapt format has been done beforehand
@@ -93,19 +93,23 @@ stat.3 <- cmpt_stat(geno = geno.admix, scores = u.admix, loadings = ss$v, sigma 
 seq <- seq(1, ncol(rrscale), by = 10)
 plot(stat.1[seq], cex = 0.1, col = "purple")
 
-A <- as.vector(c(0,0))
-B <- as.vector(c(1.2,2))
-G <- as.vector(c(1.3,2.5))
-C <- as.vector(c(0,1))
-R <- match_angle(A, B, A, C)
-s <- match_length(A, B, A, C)
-D <- R %*% B
-E <- D * s
-H <- R %*% G * s
-plot(A[1], A[2], col = "red", xlim = c(-3, 3), ylim = c(-3, 3), pch = 19)
-points(B[1], B[2], col = "blue")
-points(C[1], C[2], col = "blue")
-points(D[1], D[2], col = "blue")
-points(G[1], G[2], col = "blue")
-points(E[1], E[2], col = "green", pch = 19)
-points(H[1], H[2], col = "green", pch = 19)
+cmpt.scores.loc = function(geno, V, sigma, window, pop, i = 1, j = 2){
+  tmp <- get.pop.names(lab)
+  nSNP <- ncol(geno)
+  window.size <- length(window)
+  npop <- length(tmp)
+  uglob <- geno %*% V
+  scores <- geno[, window] %*% V[window, ]
+  for (k in 1:ncol(scores)){
+    scores[, k] <- scores[, k] / sigma[k]
+    scores[, k] <- scores[, k] * nSNP / window.size
+  }
+  xmin <- min(min(uglob[, i]), min(scores[, i]))
+  xmax <- max(max(uglob[, i]), max(scores[, i]))
+  ymin <- min(min(uglob[, j]), min(scores[, j]))
+  ymax <- max(max(uglob[, j]), max(scores[, j]))
+  #plot(uglob[, i], uglob[, j], col = as.factor(pop), xlim = c(xmin, xmax), ylim = c(ymin, ymax))
+  plot(scores[, i], scores[, j], col = as.factor(pop), pch = 19, cex = 0.5)
+  #s.class(scores, as.factor(lab), col = rainbow(npop), cellipse = 1, cstar = 1, clabel = 1)
+}
+    

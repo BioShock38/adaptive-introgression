@@ -232,7 +232,7 @@ arma::mat compute_stat_local_pca(arma::mat &geno, arma::vec &scores, arma::vec &
 }
 
 // [[Rcpp::export]]
-arma::mat compute_stat(arma::mat &geno, arma::vec &scores, arma::vec &loadings, double sigma, int window_size, int direction){
+arma::mat compute_stat_0(arma::mat &geno, arma::vec &scores, arma::vec &loadings, double sigma, int window_size, int direction){
   int nSNP = geno.n_cols;
   int nIND = geno.n_rows;
   arma::vec stat(nSNP);
