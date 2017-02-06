@@ -326,4 +326,3 @@ arma::vec cmpt_centroid(arma::mat &x){
   }
   return(a);
 }
-
