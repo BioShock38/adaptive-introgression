@@ -10,6 +10,7 @@ macowin <- "mac"
 
 if (macowin == "win"){
   sourceCpp("~/thesis/git/adaptive-introgression/rotation.cpp")
+  sourceCpp("~/thesis/git/adaptive-introgression/simple.cpp")
   sourceCpp("~/thesis/git/adaptive-introgression/imputationUtils.cpp")
   setwd("~/thesis/git/Introgression/populus/Original_data_set_ch6_12_15/")
 } else if (macowin == "mac"){

@@ -79,7 +79,7 @@ Rcpp::List cmpt_centroids(arma::mat u, arma::vec lab, int anc1, int anc2){
 }
 
 // [[Rcpp::export]]
-arma::mat rescale_local_pca(arma::mat u, arma::vec s, arma::vec dep_glob, arma::vec dep_loc){
+arma::mat rescale_local_pca(arma::mat &u, arma::vec &s, arma::vec &dep_glob, arma::vec &dep_loc){
   int nIND = u.n_rows;
   int K = u.n_cols;
   arma::mat usc(nIND, K);
@@ -90,5 +90,52 @@ arma::mat rescale_local_pca(arma::mat u, arma::vec s, arma::vec dep_glob, arma::
     }
   }
   return(usc);
+}
+
+
+
+// [[Rcpp::export]]
+double cmpt_window_stat(arma::mat &geno, 
+                           arma::mat &V, 
+                           arma::vec &sigma, 
+                           arma::mat &uglob, 
+                           int beg, 
+                           int end, 
+                           int direction, 
+                           arma::vec lab, 
+                           int adm, 
+                           int axis){
+  arma::mat uloc = cmpt_local_pca(geno, V, sigma, beg, end);
+  int nADM = uglob.n_rows; 
+  double stat = 0;
+  if (direction == 1){
+    for (int j = 0; j < nADM; j++){
+      if ((lab[j] == adm) && (uloc(j, axis) - uglob(j, axis)) > 0){
+        stat += (uloc(j, axis) - uglob(j, axis)) * (uloc(j, axis) - uglob(j, axis));
+      }
+    }
+  } else if (direction == (-1)){
+    for (int j = 0; j < nADM; j++){
+      if ((lab[j] == adm) && (uloc(j, axis) - uglob(j, axis)) < 0){
+        stat += (uloc(j, axis) - uglob(j, axis)) * (uloc(j, axis) - uglob(j, axis));
+      }
+    }
+  }
+  return(stat);
+}
+// [[Rcpp::export]]
+arma::vec cmpt_all_stat(arma::mat &geno, 
+                        arma::mat &V, 
+                        arma::vec &sigma, 
+
+                        int direction, 
+                        arma::vec lab, 
+                        int adm, 
+                        int axis){
+  int nSNP = geno.n_cols;
+  for (int i = 0; i < (nSNP - window_size); i++){
+    
+  }
+
 }
 
