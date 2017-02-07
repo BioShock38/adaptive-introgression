@@ -176,6 +176,6 @@ cmpt.scores.loc.2 = function(xmat, V, sigma, window, pop, i = 1, j = 2, pop.anc.
 cmpt.scores.loc.1(scaled.geno, ss$v, ss$d, 1000:2000, lab, pop.anc.1 = 1, pop.anc.2 = 3)
 cmpt.scores.loc.2(scaled.geno, ss$v, ss$d, as.vector(1000:2000), lab, pop.anc.1 = 1, pop.anc.2 = 3)
 stat1 <- compute_stat_0(geno.admix, u.admix, ss$v, ss$d[1], window_size = 100, direction = 1)
-stat <- cmpt_all_stat(scaled.geno, ss$v, ss$d, 25000, 1, lab, 1, 3, 4, 0)
+stat <- cmpt_all_stat(scaled.geno, ss$v, ss$d, 100, 1, lab, 1, 3, 4, 0)
 seq <- seq(1, ncol(scaled.geno), by = 10)
 plot(stat[seq], cex = 0.1, col = "purple")
