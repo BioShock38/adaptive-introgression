@@ -55,28 +55,13 @@ impute.pcadapt = function(file, lab, skip.return = FALSE){
 
 y <- impute.pcadapt(filename, lab)
 x <- pcadapt(y$x, K = 2, min.maf = min.maf, ploidy = ploidy)
+toto <- read.csv("imputed.csv")
+
 geno <- t(y$x[x$maf >= min.maf, ])
 scaled.geno <- scale(geno, center = TRUE, scale = x$maf[x$maf >= min.maf])
 s.class(x$scores, as.factor(lab),col = rainbow(3), cellipse = 1, cstar = 1, clabel = 1)
 ss <- svd(scaled.geno, nu = 2, nv = 2)
 
-u.admix <- ss$u[lab == adm.pop, ]
-u.anc <- ss$u[lab != adm.pop, ]
-geno.admix <- as.matrix(scaled.geno[lab == adm.pop, ])
-geno.anc <- as.matrix(scaled.geno[lab != adm.pop, ])
-stat1 <- compute_stat(geno.admix, 1, u.admix, ss$v, ss$d[1:2], window_size = 100, direction = 1)
-stat2 <- compute_stat(geno.admix, 1, u.admix, ss$v, ss$d[1:2], window_size = 100, direction = -1)
-stat3 <- compute_stat(geno.admix, 1, u.admix, ss$v, ss$d[1:2], window_size = 100, direction = 0)
-stat4 <- compute_stat_3(geno = geno.admix,
-                        scores = u.admix, 
-                        anc_geno = geno.anc,
-                        anc_scores = u.anc,
-                        PC = 1,
-                        loadings = ss$v,
-                        sigma = ss$d[1:2],
-                        window_size = 100,
-                        direction = 1)
-                          
                         
 seq <- seq(1, ncol(geno.admix), by = 10)
 
@@ -160,7 +145,6 @@ cmpt.scores.loc.2 = function(xmat, V, sigma, window, pop, i = 1, j = 2, pop.anc.
   for (k in 1:ncol(uloc)){
     s[k] <- abs(d1[k]) / abs(d2[k])
   }
-  print(s)
   
   usc <- rescale_local_pca(uloc, s, as.vector(d), as.vector(dloc))
   
@@ -176,6 +160,6 @@ cmpt.scores.loc.2 = function(xmat, V, sigma, window, pop, i = 1, j = 2, pop.anc.
 cmpt.scores.loc.1(scaled.geno, ss$v, ss$d, 1000:2000, lab, pop.anc.1 = 1, pop.anc.2 = 3)
 cmpt.scores.loc.2(scaled.geno, ss$v, ss$d, as.vector(1000:2000), lab, pop.anc.1 = 1, pop.anc.2 = 3)
 stat1 <- compute_stat_0(geno.admix, u.admix, ss$v, ss$d[1], window_size = 100, direction = 1)
-stat <- cmpt_all_stat(scaled.geno, ss$v, ss$d, 100, 1, lab, 1, 3, 4, 0)
+stat3 <- cmpt_all_stat(scaled.geno, ss$v, ss$d, 15000, 0, lab, 1, 3, 4, 0)
 seq <- seq(1, ncol(scaled.geno), by = 10)
 plot(stat[seq], cex = 0.1, col = "purple")

@@ -44,7 +44,7 @@ arma::mat cmpt_local_pca(arma::mat &geno, arma::mat &V, arma::vec &sigma, int be
 }
 
 // [[Rcpp::export]]
-void updt_local_scores(arma::mat &u, arma::mat &geno, arma::mat &V, arma::vec &sigma, int window_size, int direction, int i){
+void updt_local_scores(arma::mat &u, arma::mat &geno, arma::mat &V, arma::vec &sigma, int window_size, int i){
   int nIND = geno.n_rows; 
   int nSNP = geno.n_cols;
   int K = u.n_cols;
@@ -150,6 +150,10 @@ double cmpt_window_stat(arma::mat &uloc,
         stat += (uloc(j, axis) - uglob(j, axis)) * (uloc(j, axis) - uglob(j, axis));
       }
     }
+  } else if (direction == 0){
+    for (int j = 0; j < nIND; j++){
+      stat += (uloc(j, axis) - uglob(j, axis));
+    }
   }
   return(stat);
 }
@@ -204,7 +208,9 @@ double cmpt_window_wilcoxon(arma::mat &uloc,
   arma::vec tmp_sort = get_rank(tmp);
   double W = 0;
   for (int j = 0; j < nIND; j++){
-    W += (double) Z[j] * tmp_sort[j];
+    if (lab[j] == adm){
+      W += (double) Z[j] * tmp_sort[j];
+    }
   }
   return(W);
 }
@@ -234,19 +240,19 @@ arma::vec cmpt_all_stat(arma::mat &geno,
   
   arma::mat uglob = cmpt_global_pca(geno, V, sigma);
   arma::mat uloc = cmpt_local_pca(geno, V, sigma, 0, window_size);
-  
   cmpt_transformation(uloc, uglob, lab, ancstrl1, ancstrl2, s, dloc, dglob);
+  
   arma::mat usc(nIND, K);
   usc = rescale_local_pca(uloc, s, dglob, dloc);
-  //stat[0] = cmpt_window_stat(usc, uglob, direction, lab, adm, axis);
-  stat[0] = cmpt_window_wilcoxon(usc, uglob, direction, lab, adm, axis);
+  stat[0] = cmpt_window_stat(usc, uglob, direction, lab, adm, axis);
+  //stat[0] = cmpt_window_wilcoxon(usc, uglob, direction, lab, adm, axis);
   
   for (int i = 1; i < (nSNP - window_size); i++){
-    updt_local_scores(uloc, geno, V, sigma, window_size, direction, i);
+    updt_local_scores(uloc, geno, V, sigma, window_size, i);
     cmpt_transformation(uloc, uglob, lab, ancstrl1, ancstrl2, s, dloc, dglob);
     usc = rescale_local_pca(uloc, s, dloc, dglob);
-    //stat[i] = cmpt_window_stat(usc, uglob, direction, lab, adm, axis);
-    stat[i] = cmpt_window_wilcoxon(usc, uglob, direction, lab, adm, axis);
+    stat[i] = cmpt_window_stat(usc, uglob, direction, lab, adm, axis);
+    //stat[i] = cmpt_window_wilcoxon(usc, uglob, direction, lab, adm, axis);
   }
   for (int i = (nSNP - window_size); i < nSNP; i++){
     stat[i] = stat[nSNP - window_size - 1];
