@@ -21,7 +21,6 @@ if (macowin == "win"){
   setwd("~/Documents/thesis/git/Introgression/populus/Original_data_set_ch6_12_15/")  
 }
 
-
 filename <- "populus3pops.pcadapt" #we assume the conversion to the pcadapt format has been done beforehand
 popfile <- "populus3pops.pop" 
 adm.pop <- 4 #admixed population label
@@ -53,15 +52,23 @@ impute.pcadapt = function(file, lab, skip.return = FALSE){
   }
 }
 
-y <- impute.pcadapt(filename, lab)
-x <- pcadapt(y$x, K = 2, min.maf = min.maf, ploidy = ploidy)
-toto <- read.csv("imputed.csv")
+#y <- impute.pcadapt(filename, lab)
+#x <- pcadapt(y$x, K = 2, min.maf = min.maf, ploidy = ploidy)
+#geno <- t(y$x[x$maf >= min.maf, ])
 
-geno <- t(y$x[x$maf >= min.maf, ])
-scaled.geno <- scale(geno, center = TRUE, scale = x$maf[x$maf >= min.maf])
+y <- as.matrix(fread("imputed.pcadapt"))
+x <- pcadapt(y, K = 2, min.maf = min.maf, ploidy = ploidy)
+geno <- t(y[x$maf >= min.maf, ])
+
+x <- pcadapt(t(geno), K = 2, min.maf = min.maf, ploidy = ploidy)
+sd <- x$maf[x$maf >= min.maf]
+scaled.geno <- scale(geno, center = TRUE, scale = sqrt(2 * sd * (1-sd)))
 s.class(x$scores, as.factor(lab),col = rainbow(3), cellipse = 1, cstar = 1, clabel = 1)
-ss <- svd(scaled.geno, nu = 2, nv = 2)
-
+#ss <- svd(scaled.geno, nu = 2, nv = 2)
+ss1 <- NULL
+ss1$u <- x$scores
+ss1$v <- x$loadings / sqrt(ncol(scaled.geno))
+ss1$d <- x$singular.values * sqrt(nrow(scaled.geno))
                         
 seq <- seq(1, ncol(geno.admix), by = 10)
 
