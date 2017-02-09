@@ -152,7 +152,9 @@ double cmpt_window_stat(arma::mat &uloc,
     }
   } else if (direction == 0){
     for (int j = 0; j < nIND; j++){
-      stat += (uloc(j, axis) - uglob(j, axis));
+      if (lab[j] == adm){
+        stat += (uloc(j, axis) - uglob(j, axis));
+      }
     }
   }
   return(stat);
