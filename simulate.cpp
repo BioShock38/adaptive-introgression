@@ -24,3 +24,40 @@ NumericVector jumps_from_map(const NumericVector &map, const double &lambda){
   }
   return(jumps);
 }
+
+//' @export
+//' 
+// [[Rcpp::export]]
+LogicalVector ancestry_chunks(const NumericVector &jumps){
+  int n = jumps.size();  
+  LogicalVector chunks(n);
+  bool fbool = true;
+  for (int i = 0; i < n; i++){
+    if (jumps[i] == 1){
+      fbool = !fbool;
+    }
+    chunks[i] = fbool;
+  }
+  return(chunks);
+}
+
+//' @export
+//' 
+// [[Rcpp::export]]
+NumericVector generate_hybrid(const NumericMatrix &H1, const NumericMatrix &H2, const double alpha, const LogicalVector chunks){
+  int n = chunks.size();
+  NumericVector haplotype_1(n);
+  NumericVector haplotype_2(n);
+  double p = alpha;
+  double nbino = R::rbinom(1.0, p);
+  for (int i = 0; i < n; i++){
+    if (chunks[i]){
+      p = 1 - p;
+      nbino = R::rbinom(1.0, p);
+    }
+    if (nbino == 2){
+      
+    }
+  }
+  
+}

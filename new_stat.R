@@ -37,30 +37,6 @@ pop <- get.pop.names(lab)
 
 y <- as.matrix(fread("imputed.pcadapt"))
 x <- pcadapt(y, K = 2, min.maf = min.maf, ploidy = ploidy)
-<<<<<<< HEAD
-geno <- t(y[x$maf >= min.maf, ])
-
-x <- pcadapt(t(geno), K = 2, min.maf = min.maf, ploidy = ploidy)
-sd <- x$maf[x$maf >= min.maf]
-scaled.geno <- scale(geno, center = TRUE, scale = sqrt(2 * sd * (1-sd)))
-s.class(x$scores, as.factor(lab),col = rainbow(3), cellipse = 1, cstar = 1, clabel = 1)
-#ss <- svd(scaled.geno, nu = 2, nv = 2)
-ss <- svd.pcadapt(t(geno), K = 2, min.maf, ploidy, 1)
-
-stat <- scan.intro(t(geno), K = 1, d, "Trichocarpa", "Balsamifera", "Hybrid")
-                    
-seq <- seq(1, ncol(geno), by = 10)
-plot(stat[seq], cex = 0.1, col = "red")
-
-
-
-par(mfrow=c(1,1))
-par(mfrow = c(3,1))
-plot(stat1[seq], cex = 0.1, col = "aquamarine3", main = "w.r.t population on the right", ylab = "Displacement")
-plot(stat2[seq], cex = 0.1, col = "hotpink3", main = "w.r.t population on the left", ylab = "Displacement")
-plot(stat3[seq], cex = 0.1, col = "orange", main = "No bias", ylab = "Displacement")
-
-=======
 geno <- y[x$maf >= min.maf, ]
 pp <- x$maf[x$maf >= min.maf]
 scaled.geno <- scale(t(geno), center = TRUE, scale = sqrt(ploidy * pp * (1 - pp)))
@@ -70,7 +46,6 @@ s.class(ss$u, as.factor(lab), col = rainbow(3), cellipse = 1, cstar = 1, clabel 
 stat <- scan.intro(geno, K = 1, pop = popfile, ancstrl.1 = "Trichocarpa", ancstrl.2 = "Balsamifera", admxd = "Trichocarpa Hybrid")
 seq <- seq(1, nrow(geno), by = 10)
 plot(stat[seq], cex = 0.1, col = "purple")
->>>>>>> 028a60f4e24f40437071e1d068b8761f16cea929
 
 nadm <- sum(pop == adm.pop)
 ker <- as.matrix(array(0, dim = c(nadm, nadm)))
@@ -87,7 +62,7 @@ cmpt.scores.loc.2 = function(xmat, V, sigma, window, pop, i = 1, j = 2, pop.anc.
   mloc <- cmpt_centroids(u = uloc, lab = pop, anc1 = pop.anc.1, anc2 = pop.anc.2)
   d1 <- mglob$m1 - mglob$m2
   d2 <- mloc$m1 - mloc$m2
-
+  
   d <- (mglob$m1 + mglob$m2) / 2
   dloc <- (mloc$m1 + mloc$m2) / 2
   print(d)
