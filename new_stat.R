@@ -31,27 +31,6 @@ window.size <- 25000 #size of the windows around each SNP over which we average 
 lab <- read.table(popfile)[, 1] #loads the population file
 pop <- get.pop.names(lab)
 
-impute.pcadapt = function(file, lab, skip.return = FALSE){
-  if (is.character(file)){
-    dt <- as.matrix(data.table::fread(file))
-  } else if (class(file) %in% c("array", "matrix", "data.frame")){
-    dt <- as.matrix(file)
-  } else {
-    stop("Wrong argument.")
-  }
-  pop <- pcadapt::get.pop.names(lab)
-  if (missing(lab)){
-    y <- impute_geno(dt)   
-  } else if (!missing(lab)){
-    y <- impute_geno_pop(dt, lab, pop)   
-  }
-  if (skip.return == FALSE){
-    return(list(x = y$x[y$skip == 0, ]))  
-  } else if (skip.return == TRUE){
-    return(list(x = y$x[y$skip == 0, ]), ix = which(y$skip == 1)) 
-  }
-}
-
 #y <- impute.pcadapt(filename, lab)
 #x <- pcadapt(y$x, K = 2, min.maf = min.maf, ploidy = ploidy)
 #geno <- t(y$x[x$maf >= min.maf, ])
@@ -65,12 +44,14 @@ sd <- x$maf[x$maf >= min.maf]
 scaled.geno <- scale(geno, center = TRUE, scale = sqrt(2 * sd * (1-sd)))
 s.class(x$scores, as.factor(lab),col = rainbow(3), cellipse = 1, cstar = 1, clabel = 1)
 #ss <- svd(scaled.geno, nu = 2, nv = 2)
-ss1 <- NULL
-ss1$u <- x$scores
-ss1$v <- x$loadings / sqrt(ncol(scaled.geno))
-ss1$d <- x$singular.values * sqrt(nrow(scaled.geno))
-                        
-seq <- seq(1, ncol(geno.admix), by = 10)
+ss <- svd.pcadapt(t(geno), K = 2, min.maf, ploidy, 1)
+
+stat <- scan.intro(t(geno), K = 1, d, "Trichocarpa", "Balsamifera", "Hybrid")
+                    
+seq <- seq(1, ncol(geno), by = 10)
+plot(stat[seq], cex = 0.1, col = "red")
+
+
 
 par(mfrow=c(1,1))
 par(mfrow = c(3,1))
