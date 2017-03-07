@@ -28,7 +28,7 @@ min.maf <- 0.05
 ploidy <- 2
 window.size <- 25000 #size of the windows around each SNP over which we average the statistics
 
-lab <- read.table(popfile)[, 1] #loads the population file
+lab <- as.character(read.table(popfile)[, 1]) #loads the population file
 pop <- get.pop.names(lab)
 
 #y <- impute.pcadapt(filename, lab)
@@ -37,6 +37,7 @@ pop <- get.pop.names(lab)
 
 y <- as.matrix(fread("imputed.pcadapt"))
 x <- pcadapt(y, K = 2, min.maf = min.maf, ploidy = ploidy)
+<<<<<<< HEAD
 geno <- t(y[x$maf >= min.maf, ])
 
 x <- pcadapt(t(geno), K = 2, min.maf = min.maf, ploidy = ploidy)
@@ -59,6 +60,17 @@ plot(stat1[seq], cex = 0.1, col = "aquamarine3", main = "w.r.t population on the
 plot(stat2[seq], cex = 0.1, col = "hotpink3", main = "w.r.t population on the left", ylab = "Displacement")
 plot(stat3[seq], cex = 0.1, col = "orange", main = "No bias", ylab = "Displacement")
 
+=======
+geno <- y[x$maf >= min.maf, ]
+pp <- x$maf[x$maf >= min.maf]
+scaled.geno <- scale(t(geno), center = TRUE, scale = sqrt(ploidy * pp * (1 - pp)))
+x <- pcadapt(geno, K = 2, min.maf = min.maf, ploidy = ploidy)
+ss <- svd.pcadapt(geno, K = 2, min.maf = min.maf, ploidy = 2, type = 1)
+s.class(ss$u, as.factor(lab), col = rainbow(3), cellipse = 1, cstar = 1, clabel = 1)
+stat <- scan.intro(geno, K = 1, pop = popfile, ancstrl.1 = "Trichocarpa", ancstrl.2 = "Balsamifera", admxd = "Trichocarpa Hybrid")
+seq <- seq(1, nrow(geno), by = 10)
+plot(stat[seq], cex = 0.1, col = "purple")
+>>>>>>> 028a60f4e24f40437071e1d068b8761f16cea929
 
 nadm <- sum(pop == adm.pop)
 ker <- as.matrix(array(0, dim = c(nadm, nadm)))
@@ -67,55 +79,6 @@ for (i in 1:nadm){
     ker[i, j] <- exp(-((u.admix[i, 1] - u.admix[j, 1])/(2*0.000001)) ^ 2)
   }
 }
-
-stat.1 <- cmpt_stat(geno = geno.admix, scores = u.admix, loadings = ss$v, sigma = as.vector(ss$d[1:2]), window_size = 100, direction = 1)
-stat.2 <- cmpt_stat(geno = geno.admix, scores = u.admix, loadings = ss$v, sigma = as.vector(ss$d[1:2]), window_size = 100, direction = -1)
-stat.3 <- cmpt_stat(geno = geno.admix, scores = u.admix, loadings = ss$v, sigma = as.vector(ss$d[1:2]), window_size = 100, direction = 0)
-#stat.2 <- compute_stat_kernel(rr.admix, u.admix[, 1], ss$v[, 1], ss$d[1], direction = 1, kernel = ker)
-#final.stat <- roll_mean(stat^2,n=10000,by = 1)
-#stat <- (stat - mean(stat))^2
-seq <- seq(1, ncol(rrscale), by = 10)
-plot(stat.1[seq], cex = 0.1, col = "purple")
-
-cmpt.scores.loc.1 = function(xmat, V, sigma, window, pop, i = 1, j = 2, pop.anc.1, pop.anc.2){
-  tmp <- get.pop.names(lab)
-  nSNP <- ncol(xmat)
-  window.size <- length(window)
-  npop <- length(tmp)
-  uglob <- xmat %*% V
-  scores <- xmat[, window] %*% V[window, ]
-  for (k in 1:ncol(scores)){
-    scores[, k] <- scores[, k] / sigma[k]
-    scores[, k] <- scores[, k] * nSNP / (window.size)
-    uglob[, k] <- uglob[, k] / sigma[k]
-  }
-  mglob1 <- apply(uglob[pop %in% pop.anc.1, ], 2, mean)
-  mglob2 <- apply(uglob[pop %in% pop.anc.2, ], 2, mean)
-  mloc1 <- apply(scores[pop %in% pop.anc.1, ], 2, mean)
-  mloc2 <- apply(scores[pop %in% pop.anc.2, ], 2, mean)
-  d1 <- mglob1 - mglob2
-  d2 <- mloc1 - mloc2
-
-  d <- (mglob1 + mglob2) / 2
-  dloc <- (mloc1 + mloc2) / 2
-
-  s <- array(0, dim = ncol(scores))
-  for (k in 1:ncol(scores)){
-    s[k] <- abs(d1[k]) / abs(d2[k])
-    scores[, k] <- scores[, k] * s[k]
-    scores[, k] <- scores[, k] + d[k] - dloc[k]
-  }
-  print(s)
-  xmin <- min(min(uglob[, i]), min(scores[, i]))
-  xmax <- max(max(uglob[, i]), max(scores[, i]))
-  ymin <- min(min(uglob[, j]), min(scores[, j]))
-  ymax <- max(max(uglob[, j]), max(scores[, j]))
-  plot(uglob[, i], uglob[, j], col = as.factor(pop), xlim = c(xmin, xmax), ylim = c(ymin, ymax))
-  points(scores[, i], scores[, j], col = as.factor(pop), pch = 19, cex = 0.5)
-  points(d[1], d[2], col = "blue")
-  points(dloc[1], dloc[2], col = "blue", pch = 19, cex = 0.5)
-}
-
 
 cmpt.scores.loc.2 = function(xmat, V, sigma, window, pop, i = 1, j = 2, pop.anc.1, pop.anc.2){
   uloc <- cmpt_local_pca(xmat, V, sigma, window[1], tail(window, n = 1))
@@ -150,4 +113,5 @@ cmpt.scores.loc.2(scaled.geno, ss$v, ss$d, as.vector(1000:2000), lab, pop.anc.1 
 stat1 <- compute_stat_0(geno.admix, u.admix, ss$v, ss$d[1], window_size = 100, direction = 1)
 stat3 <- cmpt_all_stat(scaled.geno, ss$v, ss$d, 15000, 0, lab, 1, 3, 4, 0)
 seq <- seq(1, ncol(scaled.geno), by = 10)
-plot(stat[seq], cex = 0.1, col = "purple")
+plot(stat3[seq], cex = 0.1, col = "purple")
+hist(stat3)
