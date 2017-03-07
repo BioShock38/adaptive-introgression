@@ -36,7 +36,7 @@ double proc_scale(arma::vec &d, arma::mat &b){
 }
 
 // [[Rcpp::export]]
-Rcpp::List pca_rotation(arma::mat &a, arma::mat &b){
+arma::mat pca_rotation(arma::mat &a, arma::mat &b){
   arma::mat fcnt_a = fcnt_cpp(a);
   arma::mat fcnt_b = fcnt_cpp(b);
   arma::mat x = fcnt_a.t() * fcnt_b;
@@ -44,7 +44,7 @@ Rcpp::List pca_rotation(arma::mat &a, arma::mat &b){
   arma::vec s;
   arma::mat v;
   svd(u, s, v, x);
-  double scale = proc_scale(s, b);
+  //double scale = proc_scale(s, b);
   arma::mat R;
   R = v * u.t();
   arma::cx_vec eigval_v;
@@ -69,8 +69,7 @@ Rcpp::List pca_rotation(arma::mat &a, arma::mat &b){
     }
     R = v * u.t();
   }
-  return Rcpp::List::create(Rcpp::Named("R") = R,
-                            Rcpp::Named("s") = scale);
+  return(R);
 }
 
 // [[Rcpp::export]]
