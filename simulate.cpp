@@ -16,7 +16,7 @@ NumericVector jumps_from_map(const NumericVector &map, const double &lambda){
   for (int i = 0; i < n; i++){
     g += map[i];
     p = R::pexp(g, lambda, 1, 0);
-    ber = R::rbinom(1, p);
+    ber = R::rbinom(2, p);
     if (ber == 1){
       g = 0;
       jumps[i] = 1;
@@ -44,7 +44,7 @@ LogicalVector ancestry_chunks(const NumericVector &jumps){
 //' @export
 //' 
 // [[Rcpp::export]]
-NumericVector generate_hybrid(const NumericMatrix &H1, const NumericMatrix &H2, const double alpha, const LogicalVector chunks){
+NumericVector generate_hybrid_cpp(const NumericMatrix &H1, const NumericMatrix &H2, const double alpha, const LogicalVector chunks){
   int n = chunks.size();
   NumericVector haplotype_1(n);
   NumericVector haplotype_2(n);
@@ -55,9 +55,21 @@ NumericVector generate_hybrid(const NumericMatrix &H1, const NumericMatrix &H2, 
       p = 1 - p;
       nbino = R::rbinom(1.0, p);
     }
-    if (nbino == 2){
-      
+  }
+  return(haplotype_1);
+}
+
+//' @export
+//' 
+// [[Rcpp::export]]
+NumericMatrix haplo_to_geno(const NumericMatrix &H){
+  int nSNP = H.nrow();
+  int nIND = H.ncol() / 2;
+  NumericMatrix G(nSNP, nIND);
+  for (int j = 0; j < nIND; j++){
+    for (int i = 0; i < nSNP; i++){
+      G(i, j) = H(i, 2 * j) + H(i, 2 * j + 1); 
     }
   }
-  
+  return G;
 }
